@@ -2,7 +2,6 @@
  * Copyright (C) 2006 OpenedHand Ltd.
  *
  * OpenedHand Widget Library Video Widget - A GStreamer video GTK+ widget
- * Copyright (C) 2006  OpenedHand Ltd.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -42,6 +41,10 @@ G_DEFINE_TYPE (OwlVideoWidget,
 struct _OwlVideoWidgetPrivate {
         GstElement *playbin;
         GstXOverlay *overlay;
+
+        GMutex *overlay_lock;
+
+        GdkWindow *dummy_window;
 
         char *uri;
 
@@ -108,11 +111,130 @@ sync_force_aspect_ratio (OwlVideoWidget *video_widget)
 }
 
 /**
+ * Ensures the existance of a dummy window and returns its XID.
+ **/
+static XID
+create_dummy_window (OwlVideoWidget *video_widget)
+{
+        GdkWindowAttr attributes;
+
+        if (video_widget->priv->dummy_window)
+                return GDK_WINDOW_XID (video_widget->priv->dummy_window);
+
+        attributes.width = 0;
+        attributes.height = 0;
+        attributes.window_type = GDK_WINDOW_TOPLEVEL;
+        attributes.wclass = GDK_INPUT_OUTPUT;
+        attributes.event_mask = 0;
+
+        video_widget->priv->dummy_window = gdk_window_new (NULL,
+                                                           &attributes,
+                                                           0);
+
+        /**
+         * Sync, so that the window is definetely there when the videosink
+         * starts looking at it.
+         **/
+        XSync (GDK_WINDOW_XDISPLAY (video_widget->priv->dummy_window), FALSE);
+
+        return GDK_WINDOW_XID (video_widget->priv->dummy_window);
+}
+
+/**
+ * Destroys the dummy window, if any.
+ **/
+static void
+destroy_dummy_window (OwlVideoWidget *video_widget)
+{
+        if (video_widget->priv->dummy_window) {
+                g_object_unref (video_widget->priv->dummy_window);
+                video_widget->priv->dummy_window = NULL;
+        }
+}
+
+/**
+ * A message arrived synchronously on the bus: See if the overlay becomes available.
+ **/
+static GstBusSyncReply
+bus_sync_handler_cb (GstBus            *bus,
+                     GstMessage        *message,
+                     OwlVideoWidget *video_widget)
+{
+
+        const GstStructure *str;
+        XID xid;
+
+        str = gst_message_get_structure (message);
+        if (!str)
+                return GST_BUS_PASS;
+        
+        if (!gst_structure_has_name (str, "prepare-xwindow-id"))
+                return GST_BUS_PASS;
+
+        /**
+         * Lock.
+         **/
+        g_mutex_lock (video_widget->priv->overlay_lock);
+
+        gdk_threads_enter ();
+
+        /**
+         * Take in the new overlay.
+         **/
+        if (video_widget->priv->overlay) {
+                g_object_remove_weak_pointer
+                        (G_OBJECT (video_widget->priv->overlay),
+                         (gpointer) &video_widget->priv->overlay);
+        }
+        
+        video_widget->priv->overlay = GST_X_OVERLAY (GST_MESSAGE_SRC (message));
+
+        g_object_add_weak_pointer (G_OBJECT (video_widget->priv->overlay),
+                                   (gpointer) &video_widget->priv->overlay);
+
+        g_object_set (video_widget->priv->overlay,
+                      "handle-expose", FALSE,
+                      NULL);
+
+        sync_force_aspect_ratio (video_widget);
+
+        /**
+         * Connect the new overlay to our window.
+         **/
+        if (GTK_WIDGET_REALIZED (video_widget))
+                xid = GDK_WINDOW_XID (GTK_WIDGET (video_widget)->window);
+        else
+                xid = create_dummy_window (video_widget);
+
+        gst_x_overlay_set_xwindow_id (video_widget->priv->overlay, xid);
+
+        /**
+         * And expose.
+         **/
+        if (GTK_WIDGET_REALIZED (video_widget))
+                gst_x_overlay_expose (video_widget->priv->overlay);
+        
+        /**
+         * Unlock.
+         **/
+        gdk_threads_leave ();
+        
+        g_mutex_unlock (video_widget->priv->overlay_lock);
+
+        /**
+         * Drop this message.
+         **/
+        gst_message_unref (message);
+        
+        return GST_BUS_DROP;
+}
+
+/**
  * An error occured.
  **/
 static void
-bus_message_error_cb (GstBus            *bus,
-                      GstMessage        *message,
+bus_message_error_cb (GstBus         *bus,
+                      GstMessage     *message,
                       OwlVideoWidget *video_widget)
 {
         GError *error;
@@ -128,15 +250,14 @@ bus_message_error_cb (GstBus            *bus,
                        error);
 
         g_error_free (error);
-
 }
 
 /**
  * End of stream reached.
  **/
 static void
-bus_message_eos_cb (GstBus            *bus,
-                    GstMessage        *message,
+bus_message_eos_cb (GstBus         *bus,
+                    GstMessage     *message,
                     OwlVideoWidget *video_widget)
 {
         /**
@@ -156,8 +277,8 @@ bus_message_eos_cb (GstBus            *bus,
  * Tag list available.
  **/
 static void
-bus_message_tag_cb (GstBus            *bus,
-                    GstMessage        *message,
+bus_message_tag_cb (GstBus         *bus,
+                    GstMessage     *message,
                     OwlVideoWidget *video_widget)
 {
         GstTagList *tag_list;
@@ -176,8 +297,8 @@ bus_message_tag_cb (GstBus            *bus,
  * Buffering information available.
  **/
 static void
-bus_message_buffering_cb (GstBus            *bus,
-                          GstMessage        *message,
+bus_message_buffering_cb (GstBus         *bus,
+                          GstMessage     *message,
                           OwlVideoWidget *video_widget)
 {
         const GstStructure *str;
@@ -198,8 +319,8 @@ bus_message_buffering_cb (GstBus            *bus,
  * Duration information available.
  **/
 static void
-bus_message_duration_cb (GstBus            *bus,
-                         GstMessage        *message,
+bus_message_duration_cb (GstBus         *bus,
+                         GstMessage     *message,
                          OwlVideoWidget *video_widget)
 {
         GstFormat format;
@@ -218,44 +339,11 @@ bus_message_duration_cb (GstBus            *bus,
 }
 
 /**
- * An element message arrived: See if the overlay becomes available.
- **/
-static void
-bus_message_element_cb (GstBus            *bus,
-                        GstMessage        *message,
-                        OwlVideoWidget *video_widget)
-{
-
-        const GstStructure *str;
-
-        str = gst_message_get_structure (message);
-        if (!str)
-                return;
-        
-        if (!gst_structure_has_name (str, "prepare-xwindow-id"))
-                return;
-
-        video_widget->priv->overlay = GST_X_OVERLAY (GST_MESSAGE_SRC (message));
-
-        g_object_add_weak_pointer (G_OBJECT (video_widget->priv->overlay),
-                                   (gpointer) &video_widget->priv->overlay);
-
-        sync_force_aspect_ratio (video_widget);
-
-        if (GTK_WIDGET_REALIZED (video_widget)) {
-                XID xid;
-        
-                xid = GDK_WINDOW_XID (GTK_WIDGET (video_widget)->window);
-                gst_x_overlay_set_xwindow_id (video_widget->priv->overlay, xid);
-        }
-}
-
-/**
  * A state change occured.
  **/
 static void
-bus_message_state_change_cb (GstBus            *bus,
-                             GstMessage        *message,
+bus_message_state_change_cb (GstBus         *bus,
+                             GstMessage     *message,
                              OwlVideoWidget *video_widget)
 {
         gpointer src;
@@ -416,6 +504,10 @@ construct_pipeline (OwlVideoWidget *video_widget)
 
         gst_bus_add_signal_watch (bus);
 
+        gst_bus_set_sync_handler (bus,
+                                  (GstBusSyncHandler) bus_sync_handler_cb,
+                                  video_widget);
+        
         g_signal_connect_object (bus,
                                  "message::error",
                                  G_CALLBACK (bus_message_error_cb),
@@ -441,11 +533,7 @@ construct_pipeline (OwlVideoWidget *video_widget)
                                  G_CALLBACK (bus_message_duration_cb),
                                  video_widget,
                                  0);
-        g_signal_connect_object (bus,
-                                 "message::element",
-                                 G_CALLBACK (bus_message_element_cb),
-                                 video_widget,
-                                 0);
+ 
         g_signal_connect_object (bus,
                                  "message::state-changed",
                                  G_CALLBACK (bus_message_state_change_cb),
@@ -462,6 +550,7 @@ owl_video_widget_init (OwlVideoWidget *video_widget)
          * We do have our own GdkWindow.
          **/
         GTK_WIDGET_UNSET_FLAGS (video_widget, GTK_NO_WINDOW);
+        GTK_WIDGET_UNSET_FLAGS (video_widget, GTK_DOUBLE_BUFFERED);
 
         /**
          * Create pointer to private data.
@@ -477,6 +566,11 @@ owl_video_widget_init (OwlVideoWidget *video_widget)
         video_widget->priv->force_aspect_ratio = TRUE;
 
         /**
+         * Create lock.
+         **/
+        video_widget->priv->overlay_lock = g_mutex_new ();
+
+        /**
          * Construct GStreamer pipeline: playbin with sinks from GConf.
          **/
         construct_pipeline (video_widget);
@@ -484,9 +578,9 @@ owl_video_widget_init (OwlVideoWidget *video_widget)
 
 static void
 owl_video_widget_set_property (GObject      *object,
-                                  guint         property_id,
-                                  const GValue *value,
-                                  GParamSpec   *pspec)
+                               guint         property_id,
+                               const GValue *value,
+                               GParamSpec   *pspec)
 {
         OwlVideoWidget *video_widget;
 
@@ -522,9 +616,9 @@ owl_video_widget_set_property (GObject      *object,
 
 static void
 owl_video_widget_get_property (GObject    *object,
-                                  guint       property_id,
-                                  GValue     *value,
-                                  GParamSpec *pspec)
+                               guint       property_id,
+                               GValue     *value,
+                               GParamSpec *pspec)
 {
         OwlVideoWidget *video_widget;
 
@@ -599,6 +693,8 @@ owl_video_widget_dispose (GObject *object)
                 video_widget->priv->tick_timeout_id = 0;
         }
 
+        destroy_dummy_window (video_widget);
+
         object_class = G_OBJECT_CLASS (owl_video_widget_parent_class);
         object_class->dispose (object);
 }
@@ -610,6 +706,8 @@ owl_video_widget_finalize (GObject *object)
         GObjectClass *object_class;
 
         video_widget = OWL_VIDEO_WIDGET (object);
+
+        g_mutex_free (video_widget->priv->overlay_lock);
 
         g_free (video_widget->priv->uri);
 
@@ -634,6 +732,11 @@ owl_video_widget_realize (GtkWidget *widget)
         GTK_WIDGET_SET_FLAGS (widget, GTK_REALIZED);
 
         /**
+         * Lock.
+         **/
+        g_mutex_lock (video_widget->priv->overlay_lock);
+
+        /**
          * Create our GdkWindow.
          **/
         border_width = GTK_CONTAINER (widget)->border_width;
@@ -656,6 +759,14 @@ owl_video_widget_realize (GtkWidget *widget)
                                          attributes_mask);
         gdk_window_set_user_data (widget->window, widget);
 
+        gdk_window_set_back_pixmap (widget->window, NULL, FALSE);
+
+        /**
+         * Sync, so that the window is definetely there when the videosink
+         * starts looking at it.
+         **/
+        XSync (GDK_WINDOW_XDISPLAY (widget->window), FALSE);
+
         /**
          * Connect overlay, if available, to window.
          **/
@@ -664,7 +775,18 @@ owl_video_widget_realize (GtkWidget *widget)
                 
                 xid = GDK_WINDOW_XID (widget->window);
                 gst_x_overlay_set_xwindow_id (video_widget->priv->overlay, xid);
+                gst_x_overlay_expose (video_widget->priv->overlay);
+
+                /**
+                 * Destroy dummy window if it was there.
+                 **/
+                destroy_dummy_window (video_widget);
         }
+        
+        /**
+         * Unlock.
+         **/
+        g_mutex_unlock (video_widget->priv->overlay_lock);
 
         /**
          * Attach GtkStyle.
@@ -672,9 +794,45 @@ owl_video_widget_realize (GtkWidget *widget)
         widget->style = gtk_style_attach (widget->style, widget->window);
 }
 
+static void
+owl_video_widget_unrealize (GtkWidget *widget)
+{
+        OwlVideoWidget *video_widget;
+        GtkWidgetClass *widget_class;
+
+        video_widget = OWL_VIDEO_WIDGET (widget);
+
+        /**
+         * Lock.
+         **/
+        g_mutex_lock (video_widget->priv->overlay_lock);
+
+        /**
+         * Connect overlay, if available, to hidden window.
+         **/
+        if (video_widget->priv->overlay) {
+                XID xid;
+
+                xid = create_dummy_window (video_widget);
+                
+                gst_x_overlay_set_xwindow_id (video_widget->priv->overlay, xid);
+        }
+
+        /**
+         * Unlock.
+         **/
+        g_mutex_unlock (video_widget->priv->overlay_lock);
+
+        /**
+         * Call parent class.
+         **/
+        widget_class = GTK_WIDGET_CLASS (owl_video_widget_parent_class);
+        widget_class->unrealize (widget);
+}
+
 static gboolean
 owl_video_widget_expose (GtkWidget      *widget,
-                            GdkEventExpose *event)
+                         GdkEventExpose *event)
 {
         OwlVideoWidget *video_widget;
         GtkWidgetClass *widget_class;
@@ -687,17 +845,18 @@ owl_video_widget_expose (GtkWidget      *widget,
         if (!GTK_WIDGET_DRAWABLE (widget))
                 return FALSE;
 
-        if (video_widget->priv->overlay) {
-                /**
-                 * Forward the expose event to the videosink.
-                 **/
+        /**
+         * Lock.
+         **/
+        g_mutex_lock (video_widget->priv->overlay_lock);
 
+        /**
+         * If we have an overlay, forward the expose to GStreamer.
+         * Otherwise, we draw a black background.
+         **/
+        if (video_widget->priv->overlay)
                 gst_x_overlay_expose (video_widget->priv->overlay);
-        } else {
-                /**
-                 * Draw a black background.
-                 **/
-
+        else {
                 gdk_draw_rectangle (GDK_DRAWABLE (widget->window),
                                     widget->style->black_gc,
                                     TRUE,
@@ -706,6 +865,11 @@ owl_video_widget_expose (GtkWidget      *widget,
                                     event->area.width,
                                     event->area.height);
         }
+
+        /**
+         * Unlock.
+         **/
+        g_mutex_unlock (video_widget->priv->overlay_lock);
 
         /**
          * Call parent class.
@@ -718,7 +882,7 @@ owl_video_widget_expose (GtkWidget      *widget,
 
 static void
 owl_video_widget_size_request (GtkWidget      *widget,
-                                  GtkRequisition *requisition)
+                               GtkRequisition *requisition)
 {
         int border_width;
         GtkWidget *child;
@@ -738,7 +902,7 @@ owl_video_widget_size_request (GtkWidget      *widget,
 
 static void
 owl_video_widget_size_allocate (GtkWidget     *widget,
-                                   GtkAllocation *allocation)
+                                GtkAllocation *allocation)
 {
         OwlVideoWidget *video_widget;
         int border_width;
@@ -804,6 +968,7 @@ owl_video_widget_class_init (OwlVideoWidgetClass *klass)
         widget_class = GTK_WIDGET_CLASS (klass);
 
         widget_class->realize       = owl_video_widget_realize;
+        widget_class->unrealize     = owl_video_widget_unrealize;
         widget_class->expose_event  = owl_video_widget_expose;
         widget_class->size_request  = owl_video_widget_size_request;
         widget_class->size_allocate = owl_video_widget_size_allocate;
@@ -958,7 +1123,7 @@ owl_video_widget_new (void)
  **/
 void
 owl_video_widget_set_uri (OwlVideoWidget *video_widget,
-                             const char        *uri)
+                          const char     *uri)
 {
         GstState state, pending;
 
@@ -1063,7 +1228,7 @@ owl_video_widget_get_uri (OwlVideoWidget *video_widget)
  **/
 void
 owl_video_widget_set_playing (OwlVideoWidget *video_widget,
-                                 gboolean           playing)
+                              gboolean        playing)
 {
         g_return_if_fail (OWL_IS_VIDEO_WIDGET (video_widget));
 
@@ -1135,7 +1300,7 @@ owl_video_widget_get_playing (OwlVideoWidget *video_widget)
  **/
 void
 owl_video_widget_set_position (OwlVideoWidget *video_widget,
-                                  int                position)
+                               int             position)
 {
         GstState state, pending;
 
@@ -1215,7 +1380,7 @@ owl_video_widget_get_position (OwlVideoWidget *video_widget)
  **/
 void
 owl_video_widget_set_volume (OwlVideoWidget *video_widget,
-                                double             volume)
+                             double          volume)
 {
         g_return_if_fail (OWL_IS_VIDEO_WIDGET (video_widget));
         g_return_if_fail (volume >= 0.0 && volume <= GST_VOL_MAX);
@@ -1305,9 +1470,8 @@ owl_video_widget_get_duration (OwlVideoWidget *video_widget)
  * honoured.
  **/
 void
-owl_video_widget_set_force_aspect_ratio
-                                       (OwlVideoWidget *video_widget,
-                                        gboolean           force_aspect_ratio)
+owl_video_widget_set_force_aspect_ratio (OwlVideoWidget *video_widget,
+                                         gboolean        force_aspect_ratio)
 {
         g_return_if_fail (OWL_IS_VIDEO_WIDGET (video_widget));
 
@@ -1316,8 +1480,12 @@ owl_video_widget_set_force_aspect_ratio
 
         video_widget->priv->force_aspect_ratio = force_aspect_ratio;
 
+        g_mutex_lock (video_widget->priv->overlay_lock);
+
         if (video_widget->priv->overlay)
                 sync_force_aspect_ratio (video_widget);
+
+        g_mutex_unlock (video_widget->priv->overlay_lock);
 
         g_object_notify (G_OBJECT (video_widget), "force-aspect-ratio");
 }

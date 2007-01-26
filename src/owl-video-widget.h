@@ -2,7 +2,6 @@
  * Copyright (C) 2006 OpenedHand Ltd.
  *
  * OpenedHand Widget Library Video Widget - A GStreamer video GTK+ widget
- * Copyright (C) 2006  OpenedHand Ltd.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -62,10 +61,10 @@ typedef struct {
 
         /* Signals */
         void (* tag_list_available) (OwlVideoWidget *video_widget,
-                                     GstTagList        *tag_list);
+                                     GstTagList     *tag_list);
         void (* eos)                (OwlVideoWidget *video_widget);
         void (* error)              (OwlVideoWidget *video_widget,
-                                     GError            *error);
+                                     GError         *error);
         
         /* Future padding */
         void (* _owl_reserved1) (void);
@@ -75,56 +74,54 @@ typedef struct {
 } OwlVideoWidgetClass;
 
 GType
-owl_video_widget_get_type           (void) G_GNUC_CONST;
+owl_video_widget_get_type               (void) G_GNUC_CONST;
 
 GtkWidget *
-owl_video_widget_new                (void);
+owl_video_widget_new                    (void);
 
 void
-owl_video_widget_set_uri            (OwlVideoWidget *video_widget,
-                                        const char        *uri);
+owl_video_widget_set_uri                (OwlVideoWidget *video_widget,
+                                         const char     *uri);
 
 const char *
-owl_video_widget_get_uri            (OwlVideoWidget *video_widget);
+owl_video_widget_get_uri                (OwlVideoWidget *video_widget);
 
 void
-owl_video_widget_set_playing        (OwlVideoWidget *video_widget,
-                                        gboolean           playing);
+owl_video_widget_set_playing            (OwlVideoWidget *video_widget,
+                                         gboolean        playing);
 
 gboolean
-owl_video_widget_get_playing        (OwlVideoWidget *video_widget);
+owl_video_widget_get_playing            (OwlVideoWidget *video_widget);
 
 void
-owl_video_widget_set_position       (OwlVideoWidget *video_widget,
-                                        int                position);
+owl_video_widget_set_position           (OwlVideoWidget *video_widget,
+                                         int             position);
 
 int
-owl_video_widget_get_position       (OwlVideoWidget *video_widget);
+owl_video_widget_get_position           (OwlVideoWidget *video_widget);
 
 void
-owl_video_widget_set_volume         (OwlVideoWidget *video_widget,
-                                        double             volume);
+owl_video_widget_set_volume             (OwlVideoWidget *video_widget,
+                                         double          volume);
 
 double
-owl_video_widget_get_volume         (OwlVideoWidget *video_widget);
+owl_video_widget_get_volume             (OwlVideoWidget *video_widget);
 
 gboolean
-owl_video_widget_get_can_seek       (OwlVideoWidget *video_widget);
+owl_video_widget_get_can_seek           (OwlVideoWidget *video_widget);
 
 int
-owl_video_widget_get_buffer_percent (OwlVideoWidget *video_widget);
+owl_video_widget_get_buffer_percent     (OwlVideoWidget *video_widget);
 
 int
-owl_video_widget_get_duration       (OwlVideoWidget *video_widget);
+owl_video_widget_get_duration           (OwlVideoWidget *video_widget);
 
 void
-owl_video_widget_set_force_aspect_ratio
-                                       (OwlVideoWidget *video_widget,
-                                        gboolean           force_aspect_ratio);
+owl_video_widget_set_force_aspect_ratio (OwlVideoWidget *video_widget,
+                                         gboolean        force_aspect_ratio);
 
 gboolean
-owl_video_widget_get_force_aspect_ratio
-                                       (OwlVideoWidget *video_widget);
+owl_video_widget_get_force_aspect_ratio (OwlVideoWidget *video_widget);
 
 G_END_DECLS
 

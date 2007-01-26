@@ -2,7 +2,6 @@
  * Copyright (C) 2006 OpenedHand Ltd.
  *
  * OpenedHand Widget Library Video Widget - A GStreamer video GTK+ widget
- * Copyright (C) 2006  OpenedHand Ltd.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -85,7 +84,7 @@ owl_overlay_bin_realize (GtkWidget *widget)
 
 static void
 owl_overlay_bin_size_request (GtkWidget      *widget,
-                                  GtkRequisition *requisition)
+                              GtkRequisition *requisition)
 {
         int border_width;
         GtkWidget *child;
@@ -105,7 +104,7 @@ owl_overlay_bin_size_request (GtkWidget      *widget,
 
 static void
 owl_overlay_bin_size_allocate (GtkWidget     *widget,
-                                   GtkAllocation *allocation)
+                               GtkAllocation *allocation)
 {
         OwlOverlayBin *overlay_bin;
         int border_width;
