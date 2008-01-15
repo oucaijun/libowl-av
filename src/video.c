@@ -221,6 +221,8 @@ set_has_media (AppData *data, gboolean has_media)
 {
         gtk_widget_set_sensitive (GTK_WIDGET (data->play_pause_button),
                                   has_media);
+        gtk_widget_set_sensitive (GTK_WIDGET (data->fullscreen_button),
+                                  has_media);
         gtk_widget_set_sensitive (GTK_WIDGET (data->position_slider),
                                   has_media);
         gtk_widget_set_sensitive (GTK_WIDGET (data->position_label),
