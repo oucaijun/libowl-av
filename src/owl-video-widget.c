@@ -749,7 +749,8 @@ owl_video_widget_realize (GtkWidget *widget)
         attributes.wclass = GDK_INPUT_OUTPUT;
         attributes.visual = gtk_widget_get_visual (widget);
         attributes.colormap = gtk_widget_get_colormap (widget);
-        attributes.event_mask = GDK_EXPOSURE_MASK;
+        attributes.event_mask = gtk_widget_get_events (widget);
+        attributes.event_mask |= GDK_EXPOSURE_MASK;
 
         attributes_mask = GDK_WA_X | GDK_WA_Y | GDK_WA_VISUAL | GDK_WA_COLORMAP;
 
@@ -762,7 +763,7 @@ owl_video_widget_realize (GtkWidget *widget)
         gdk_window_set_back_pixmap (widget->window, NULL, FALSE);
 
         /**
-         * Sync, so that the window is definetely there when the videosink
+         * Sync, so that the window is definitely there when the videosink
          * starts looking at it.
          **/
         XSync (GDK_WINDOW_XDISPLAY (widget->window), FALSE);
@@ -837,6 +838,10 @@ owl_video_widget_expose (GtkWidget      *widget,
         OwlVideoWidget *video_widget;
         GtkWidgetClass *widget_class;
 
+        /* Perform extra exposure compression */
+        if (event && event->count > 0)
+          return TRUE;
+        
         video_widget = OWL_VIDEO_WIDGET (widget);
 
         /**
@@ -845,6 +850,10 @@ owl_video_widget_expose (GtkWidget      *widget,
         if (!GTK_WIDGET_DRAWABLE (widget))
                 return FALSE;
 
+        gdk_draw_rectangle (widget->window, widget->style->black_gc, TRUE,
+                            event->area.x, event->area.y,
+                            event->area.width, event->area.height);
+
         /**
          * Lock.
          **/
@@ -852,19 +861,9 @@ owl_video_widget_expose (GtkWidget      *widget,
 
         /**
          * If we have an overlay, forward the expose to GStreamer.
-         * Otherwise, we draw a black background.
          **/
         if (video_widget->priv->overlay)
                 gst_x_overlay_expose (video_widget->priv->overlay);
-        else {
-                gdk_draw_rectangle (GDK_DRAWABLE (widget->window),
-                                    widget->style->black_gc,
-                                    TRUE,
-                                    event->area.x,
-                                    event->area.y,
-                                    event->area.width,
-                                    event->area.height);
-        }
 
         /**
          * Unlock.
@@ -877,7 +876,7 @@ owl_video_widget_expose (GtkWidget      *widget,
         widget_class = GTK_WIDGET_CLASS (owl_video_widget_parent_class);
         widget_class->expose_event (widget, event);
 
-        return FALSE;
+        return TRUE;
 }
 
 static void
