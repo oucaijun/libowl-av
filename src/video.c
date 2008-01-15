@@ -216,6 +216,17 @@ play_pause_button_toggled_cb (GtkToggleButton *button,
                                          active);
 }
 
+static void
+set_has_media (AppData *data, gboolean has_media)
+{
+        gtk_widget_set_sensitive (GTK_WIDGET (data->play_pause_button),
+                                  has_media);
+        gtk_widget_set_sensitive (GTK_WIDGET (data->position_slider),
+                                  has_media);
+        gtk_widget_set_sensitive (GTK_WIDGET (data->position_label),
+                                  has_media);
+}
+
 /**
  * Open File button clicked.
  **/
@@ -250,13 +261,7 @@ open_file_button_clicked_cb (GtkButton *button,
                 /**
                  * Start playing.
                  **/
-                gtk_widget_set_sensitive (GTK_WIDGET (data->play_pause_button),
-                                          TRUE);
-                gtk_widget_set_sensitive (GTK_WIDGET (data->position_slider),
-                                          TRUE);
-                gtk_widget_set_sensitive (GTK_WIDGET (data->position_label),
-                                          TRUE);
-                
+                set_has_media (data, TRUE);
                 gtk_toggle_button_set_active (data->play_pause_button, TRUE);
 
                 break;
@@ -444,8 +449,6 @@ main (int argc, char **argv)
         gtk_container_add (GTK_CONTAINER (overlay_bin),
                            GTK_WIDGET (data->play_pause_button));
 
-        gtk_widget_set_sensitive (GTK_WIDGET (data->play_pause_button), FALSE);
-
         g_signal_connect (data->play_pause_button,
                           "toggled",
                           G_CALLBACK (play_pause_button_toggled_cb),
@@ -520,7 +523,6 @@ main (int argc, char **argv)
         gtk_widget_set_size_request
                 (GTK_WIDGET (data->position_slider), 250, -1);
         gtk_scale_set_draw_value (data->position_slider, FALSE);
-        gtk_widget_set_sensitive (GTK_WIDGET (data->position_slider), FALSE);
 
         data->changing_position_slider   = FALSE;
         data->position_slider_timeout_id = 0;
@@ -536,7 +538,6 @@ main (int argc, char **argv)
         data->position_label = GTK_LABEL (gtk_label_new (""));
         gtk_box_pack_start_defaults (GTK_BOX (position_hbox),
                                      GTK_WIDGET (data->position_label));
-        gtk_widget_set_sensitive (GTK_WIDGET (data->position_label), FALSE);
         notify_duration_or_position_cb (G_OBJECT (data->video_widget),
                                         NULL, data);
 
@@ -565,6 +566,8 @@ main (int argc, char **argv)
         /**
          * Go!
          **/
+        set_has_media (data, FALSE);
+        
         gtk_widget_show_all (GTK_WIDGET (data->window));
 
         gtk_main ();
