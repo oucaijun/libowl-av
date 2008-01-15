@@ -31,14 +31,17 @@ typedef struct {
 
         OwlVideoWidget *video_widget;
 
+        GtkWidget *toolbar;
         GtkToggleButton *play_pause_button;
         GtkButton *open_file_button;
         BaconVolumeButton *volume_button;
         GtkScale *position_slider;
         GtkLabel *position_label;
+        GtkButton *fullscreen_button;
 
         gboolean changing_position_slider;
         guint position_slider_timeout_id;
+        guint unfullscreen_id;
 } AppData;
 
 /**
@@ -276,6 +279,30 @@ volume_button_value_changed_cb (BaconVolumeButton *button,
                                         bacon_volume_button_get_value (button));
 }
 
+static gboolean
+window_button_cb (GtkWidget *widget, GdkEventButton *event, AppData *data)
+{
+        gtk_window_unfullscreen (data->window);
+        gtk_widget_show (data->toolbar);
+
+        g_signal_handler_disconnect (widget, data->unfullscreen_id);
+        data->unfullscreen_id = 0;
+
+        return TRUE;
+}
+
+static void
+fullscreen_button_clicked_cb (GtkButton *button,
+                              AppData   *data)
+{
+        gtk_widget_hide (data->toolbar);
+        gtk_window_fullscreen (data->window);
+
+        data->unfullscreen_id = g_signal_connect
+                (data->window, "button-press-event", G_CALLBACK (window_button_cb), data);
+}
+
+
 /**
  * Seek scheduled: Seek in stream.
  **/
@@ -345,6 +372,7 @@ main (int argc, char **argv)
         data->window = GTK_WINDOW (gtk_window_new (GTK_WINDOW_TOPLEVEL));
         gtk_window_set_title (data->window, "Video Player");
         gtk_window_set_default_size (data->window, 640, 480);
+        gtk_widget_add_events (GTK_WIDGET (data->window), GDK_BUTTON_PRESS_MASK);
 
         g_signal_connect (data->window,
                           "delete-event",
@@ -511,6 +539,28 @@ main (int argc, char **argv)
         gtk_widget_set_sensitive (GTK_WIDGET (data->position_label), FALSE);
         notify_duration_or_position_cb (G_OBJECT (data->video_widget),
                                         NULL, data);
+
+        /**
+         * Create fullscreen button.
+         **/
+        overlay_bin = owl_overlay_bin_new ();
+        gtk_box_pack_start (GTK_BOX (buttons_hbox),
+                            overlay_bin, FALSE, TRUE, 0);
+
+        data->fullscreen_button = GTK_BUTTON (gtk_button_new ());
+        gtk_container_add (GTK_CONTAINER (overlay_bin),
+                           GTK_WIDGET (data->fullscreen_button));
+
+        g_signal_connect (data->fullscreen_button,
+                          "clicked",
+                          G_CALLBACK (fullscreen_button_clicked_cb),
+                          data);
+        
+        image = gtk_image_new_from_stock (GTK_STOCK_FULLSCREEN,
+                                          GTK_ICON_SIZE_LARGE_TOOLBAR);
+        gtk_container_add (GTK_CONTAINER (data->fullscreen_button), image);
+
+        data->toolbar = hbox;
 
         /**
          * Go!
