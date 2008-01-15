@@ -568,7 +568,13 @@ main (int argc, char **argv)
         /**
          * Go!
          **/
-        set_has_media (data, FALSE);
+        if (argc > 1) {
+                owl_video_widget_set_uri (data->video_widget, argv[1]);
+                set_has_media (data, TRUE);
+                gtk_toggle_button_set_active (data->play_pause_button, TRUE);
+        } else {
+                set_has_media (data, FALSE);
+        }
         
         gtk_widget_show_all (GTK_WIDGET (data->window));
 
