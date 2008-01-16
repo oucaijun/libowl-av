@@ -1327,12 +1327,10 @@ owl_video_widget_set_position (OwlVideoWidget *video_widget,
          * Perform the seek.
          **/
         gst_element_seek (video_widget->priv->playbin,
-                          1.0,
-                          GST_FORMAT_TIME,
-                          GST_SEEK_FLAG_FLUSH,
-                          GST_SEEK_TYPE_SET,
-                          position * GST_SECOND,
-                          0, 0);
+                          1.0, GST_FORMAT_TIME,
+                          GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT,
+                          GST_SEEK_TYPE_SET, position * GST_SECOND,
+                          GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
         /**
          * Restore state.
          **/
