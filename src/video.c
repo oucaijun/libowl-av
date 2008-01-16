@@ -350,6 +350,34 @@ position_slider_value_changed_cb (GtkRange *range,
                                gtk_range_get_value (range));
 }
 
+/* Nasty hack so that we have a fullscreen button */
+static void
+ensure_fullscreen_stock (void)
+{
+#ifndef GTK_STOCK_FULLSCREEN
+  /* This must be GTK+ 2.6, so we need to register the fullscreen item
+     manually. */
+  
+#define GTK_STOCK_FULLSCREEN "gtk-fullscreen"
+
+  GtkIconFactory *factory;
+  GdkPixbuf *pixbuf;
+  GtkIconSet *set;
+  
+  /* You never know... */
+  if (gtk_icon_factory_lookup_default (GTK_STOCK_FULLSCREEN))
+    return;
+  
+  factory = gtk_icon_factory_new ();
+  pixbuf = gdk_pixbuf_new_from_file (PKGDATADIR "/gtk-fullscreen.png", NULL);
+  if (pixbuf) {
+    set = gtk_icon_set_new_from_pixbuf (pixbuf);
+    gtk_icon_factory_add (factory, GTK_STOCK_FULLSCREEN, set);
+    gtk_icon_factory_add_default (factory);
+  }
+#endif
+}
+
 /**
  * Main.
  **/
@@ -559,6 +587,7 @@ main (int argc, char **argv)
                           G_CALLBACK (fullscreen_button_clicked_cb),
                           data);
         
+        ensure_fullscreen_stock ();
         image = gtk_image_new_from_stock (GTK_STOCK_FULLSCREEN,
                                           GTK_ICON_SIZE_LARGE_TOOLBAR);
         gtk_container_add (GTK_CONTAINER (data->fullscreen_button), image);

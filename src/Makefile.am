@@ -28,6 +28,8 @@ libowl_video_widgetinclude_HEADERS = \
 
 video_LDADD   = $(VIDEO_LIBS) libowl-video-widget.la
 
+dist_pkgdata_DATA = gtk-fullscreen.png
+
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libowl-video-widget.pc
 
