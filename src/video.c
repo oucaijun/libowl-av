@@ -386,7 +386,7 @@ main (int argc, char **argv)
 {
         AppData *data;
         GtkWidget *overlay_bin, *vbox, *hbox, *position_hbox, *alignment,
-                  *image, *buttons_hbox;
+                  *image, *buttons_hbox, *bbox;
 
         /**
          * Init.
@@ -465,7 +465,7 @@ main (int argc, char **argv)
         /**
          * Create button box inside above HBox.
          **/
-        buttons_hbox = gtk_hbox_new (TRUE, 6);
+        buttons_hbox = gtk_hbox_new (FALSE, 6);
         gtk_box_pack_start (GTK_BOX (hbox), buttons_hbox, FALSE, TRUE, 0);
 
         /**
@@ -484,9 +484,14 @@ main (int argc, char **argv)
                           G_CALLBACK (play_pause_button_toggled_cb),
                           data);
 
-        image = gtk_image_new_from_icon_name ("stock_media-play",
-                                              GTK_ICON_SIZE_LARGE_TOOLBAR);
-        gtk_container_add (GTK_CONTAINER (data->play_pause_button), image);
+        bbox = gtk_hbox_new (FALSE, 4);
+        image = gtk_image_new_from_stock (GTK_STOCK_MEDIA_PLAY,
+                                          GTK_ICON_SIZE_LARGE_TOOLBAR);
+        gtk_container_add (GTK_CONTAINER (bbox), image);
+        image = gtk_image_new_from_stock (GTK_STOCK_MEDIA_PAUSE,
+                                          GTK_ICON_SIZE_LARGE_TOOLBAR);
+        gtk_container_add (GTK_CONTAINER (bbox), image);
+        gtk_container_add (GTK_CONTAINER (data->play_pause_button), bbox);
 
         /**
          * Create Open File button.
