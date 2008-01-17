@@ -386,7 +386,7 @@ main (int argc, char **argv)
 {
         AppData *data;
         GtkWidget *overlay_bin, *vbox, *hbox, *position_hbox, *alignment,
-                  *image, *buttons_hbox, *bbox;
+                  *image, *bbox;
 
         /**
          * Init.
@@ -463,16 +463,10 @@ main (int argc, char **argv)
         gtk_container_add (GTK_CONTAINER (alignment), hbox);
 
         /**
-         * Create button box inside above HBox.
-         **/
-        buttons_hbox = gtk_hbox_new (FALSE, 6);
-        gtk_box_pack_start (GTK_BOX (hbox), buttons_hbox, FALSE, TRUE, 0);
-
-        /**
          * Create Play/Pause button.
          **/
         overlay_bin = owl_overlay_bin_new ();
-        gtk_box_pack_start (GTK_BOX (buttons_hbox),
+        gtk_box_pack_start (GTK_BOX (hbox),
                             overlay_bin, FALSE, TRUE, 0);
         
         data->play_pause_button = GTK_TOGGLE_BUTTON (gtk_toggle_button_new ());
@@ -497,7 +491,7 @@ main (int argc, char **argv)
          * Create Open File button.
          **/
         overlay_bin = owl_overlay_bin_new ();
-        gtk_box_pack_start (GTK_BOX (buttons_hbox),
+        gtk_box_pack_start (GTK_BOX (hbox),
                             overlay_bin, FALSE, TRUE, 0);
 
         data->open_file_button = GTK_BUTTON (gtk_button_new ());
@@ -517,7 +511,7 @@ main (int argc, char **argv)
          * Create volume button.
          **/
         overlay_bin = owl_overlay_bin_new ();
-        gtk_box_pack_start (GTK_BOX (buttons_hbox),
+        gtk_box_pack_start (GTK_BOX (hbox),
                             overlay_bin, FALSE, TRUE, 0);
 
         data->volume_button = BACON_VOLUME_BUTTON
@@ -536,6 +530,27 @@ main (int argc, char **argv)
                           "value-changed",
                           G_CALLBACK (volume_button_value_changed_cb),
                           data);
+
+        /**
+         * Create fullscreen button.
+         **/
+        overlay_bin = owl_overlay_bin_new ();
+        gtk_box_pack_start (GTK_BOX (hbox),
+                            overlay_bin, FALSE, TRUE, 0);
+
+        data->fullscreen_button = GTK_BUTTON (gtk_button_new ());
+        gtk_container_add (GTK_CONTAINER (overlay_bin),
+                           GTK_WIDGET (data->fullscreen_button));
+
+        g_signal_connect (data->fullscreen_button,
+                          "clicked",
+                          G_CALLBACK (fullscreen_button_clicked_cb),
+                          data);
+        
+        ensure_fullscreen_stock ();
+        image = gtk_image_new_from_stock (GTK_STOCK_FULLSCREEN,
+                                          GTK_ICON_SIZE_LARGE_TOOLBAR);
+        gtk_container_add (GTK_CONTAINER (data->fullscreen_button), image);
 
         /**
          * Create slider + position label box.
@@ -575,27 +590,6 @@ main (int argc, char **argv)
                                      GTK_WIDGET (data->position_label));
         notify_duration_or_position_cb (G_OBJECT (data->video_widget),
                                         NULL, data);
-
-        /**
-         * Create fullscreen button.
-         **/
-        overlay_bin = owl_overlay_bin_new ();
-        gtk_box_pack_start (GTK_BOX (buttons_hbox),
-                            overlay_bin, FALSE, TRUE, 0);
-
-        data->fullscreen_button = GTK_BUTTON (gtk_button_new ());
-        gtk_container_add (GTK_CONTAINER (overlay_bin),
-                           GTK_WIDGET (data->fullscreen_button));
-
-        g_signal_connect (data->fullscreen_button,
-                          "clicked",
-                          G_CALLBACK (fullscreen_button_clicked_cb),
-                          data);
-        
-        ensure_fullscreen_stock ();
-        image = gtk_image_new_from_stock (GTK_STOCK_FULLSCREEN,
-                                          GTK_ICON_SIZE_LARGE_TOOLBAR);
-        gtk_container_add (GTK_CONTAINER (data->fullscreen_button), image);
 
         data->toolbar = hbox;
 
