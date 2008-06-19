@@ -2,7 +2,7 @@
 
 [CCode (cprefix = "Owl", lower_case_cprefix = "owl_")]
 namespace Owl {
-	[CCode (cheader_filename = "owl-video-widget.h")]
+	[CCode (cheader_filename = "owl/owl-video-widget.h")]
 	public class VideoWidget : Gtk.Bin, Gtk.Buildable, Atk.Implementor {
 		public int get_buffer_percent ();
 		public bool get_can_seek ();
