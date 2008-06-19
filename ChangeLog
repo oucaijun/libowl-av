@@ -3,6 +3,20 @@
 	* Makefile.am:
 	* configure.ac:
 	* examples/Makefile.am:
+	* examples/bacon-volume.c:
+	* examples/bacon-volume.h:
+	* examples/owl-overlay-bin.c:
+	* examples/owl-overlay-bin.h:
+	* examples/video.c:
+	* src/Makefile.am:
+
+	Move video app into separate module.
+
+2008-06-19  Jorn Baayen  <jorn@openedhand.com>
+
+	* Makefile.am:
+	* configure.ac:
+	* examples/Makefile.am:
 	* src/Makefile.am:
 	* src/bacon-volume.c:
 	* src/bacon-volume.h:

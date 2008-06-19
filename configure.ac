@@ -11,8 +11,10 @@ AC_PROG_CC_STDC
 AC_STDC_HEADERS
 AC_PROG_LIBTOOL
 
-PKG_CHECK_MODULES(VIDEO, gtk+-2.0 gstreamer-0.10 gstreamer-plugins-base-0.10)
-VIDEO_LIBS="$VIDEO_LIBS -lgstinterfaces-0.10"
+PKG_CHECK_MODULES(VIDEO_WIDGET, gtk+-2.0 \
+                                gstreamer-0.10 \
+                                gstreamer-plugins-base-0.10)
+VIDEO_WIDGET_LIBS="$VIDEO_WIDGET_LIBS -lgstinterfaces-0.10"
 
 PKG_CHECK_MODULES(VALA, [vala-1.0 >= 0.3.1], have_vala=yes, have_vala=no)
 
@@ -23,14 +25,13 @@ if test "x$have_vala" = "xyes"; then
     AC_SUBST(VAPIDIR)
 fi
 
-AC_SUBST(VIDEO_CFLAGS)
-AC_SUBST(VIDEO_LIBS)
+AC_SUBST(VIDEO_WIDGET_CFLAGS)
+AC_SUBST(VIDEO_WIDGET_LIBS)
 
 AC_CONFIG_FILES([
 	Makefile
 	owl-video-widget.pc
 	src/Makefile
-    examples/Makefile
 ])
 
 AC_OUTPUT
