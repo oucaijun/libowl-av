@@ -2,6 +2,20 @@
 
 	* Makefile.am:
 	* configure.ac:
+	* examples/Makefile.am:
+	* src/Makefile.am:
+	* src/bacon-volume.c:
+	* src/bacon-volume.h:
+	* src/owl-overlay-bin.c:
+	* src/owl-overlay-bin.h:
+	* src/video.c:
+
+	Split out video application into examples folder.
+
+2008-06-19  Jorn Baayen  <jorn@openedhand.com>
+
+	* Makefile.am:
+	* configure.ac:
 	* owl-video-widget.vapi:
 
 	Add vala bindings.

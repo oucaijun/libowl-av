@@ -1,4 +1,4 @@
-SUBDIRS = src
+SUBDIRS = src examples
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = owl-video-widget.pc

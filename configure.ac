@@ -30,6 +30,7 @@ AC_CONFIG_FILES([
 	Makefile
 	owl-video-widget.pc
 	src/Makefile
+    examples/Makefile
 ])
 
 AC_OUTPUT
