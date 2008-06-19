@@ -3,7 +3,7 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: libowl-video-widget
+Name: owl-video-widget
 Description: GStreamer video GTK+ widget
 Requires: gtk+-2.0 gstreamer-0.10 gstreamer-plugins-base-0.10
 Version: @VERSION@

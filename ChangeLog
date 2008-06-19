@@ -1,5 +1,15 @@
 2008-06-19  Jorn Baayen  <jorn@openedhand.com>
 
+	* Makefile.am:
+	* configure.ac:
+	* owl-video-widget.pc.in:
+	* src/Makefile.am:
+	* src/libowl-video-widget.pc.in:
+
+	Rename pkg-config package to owl-video-widget.
+
+2008-06-19  Jorn Baayen  <jorn@openedhand.com>
+
 	* src/Makefile.am:
 
 	Do not include OverlayBin in library.
