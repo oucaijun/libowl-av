@@ -27,7 +27,7 @@ namespace Owl {
 		public string uri { get; set; }
 		public double volume { get; set; }
 		public virtual signal void eos ();
-		public virtual signal void error (void* error);
-		public virtual signal void tag_list_available (void* tag_list);
+		public virtual signal void error (GLib.Error error);
+		public virtual signal void tag_list_available (Gst.TagList tag_list);
 	}
 }

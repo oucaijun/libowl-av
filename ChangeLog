@@ -1,3 +1,9 @@
+2008-06-20  Jorn Baayen  <jorn@openedhand.com>
+
+	* owl-video-widget.vapi:
+
+	Specify correct types for 'error' and 'tag_list_available' signals.
+
 2008-06-19  Jorn Baayen  <jorn@openedhand.com>
 
 	* Makefile.am:
