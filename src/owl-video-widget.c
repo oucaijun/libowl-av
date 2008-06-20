@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 OpenedHand Ltd.
+ * Copyright (C) 2006, 2008 OpenedHand Ltd.
  *
  * OpenedHand Widget Library Video Widget - A GStreamer video GTK+ widget
  *
@@ -376,16 +376,11 @@ bus_message_state_change_cb (GstBus         *bus,
                                                  NULL);
                 } else {
                         /**
-                         * Could not query for ability to seek. Determine
-                         * using URI.
+                         * Could not query for ability to seek. Assume
+                         * we can seek.
                          **/
 
-                        if (g_str_has_prefix (video_widget->priv->uri,
-                                              "http://")) {
-                                video_widget->priv->can_seek = FALSE;
-                        } else {
-                                video_widget->priv->can_seek = TRUE;
-                        }
+                        video_widget->priv->can_seek = TRUE;
                 }
 
                 gst_query_unref (query);

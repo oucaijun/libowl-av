@@ -1,5 +1,11 @@
 2008-06-20  Jorn Baayen  <jorn@openedhand.com>
 
+	* src/owl-video-widget.c (bus_message_state_change_cb):
+
+	Support seeking over HTTP.
+
+2008-06-20  Jorn Baayen  <jorn@openedhand.com>
+
 	* owl-video-widget.vapi:
 
 	Specify correct types for 'error' and 'tag_list_available' signals.
