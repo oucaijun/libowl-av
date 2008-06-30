@@ -377,7 +377,7 @@ bus_message_state_change_cb (GstBus         *bus,
                 } else {
                         /**
                          * Could not query for ability to seek. Assume
-                         * we can seek.
+                         * seek is supported.
                          **/
 
                         video_widget->priv->can_seek = TRUE;
