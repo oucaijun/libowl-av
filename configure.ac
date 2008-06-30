@@ -31,7 +31,7 @@ AC_SUBST(LIBOWL_AV_LIBS)
 AC_CONFIG_FILES([
 	Makefile
 	libowl-av.pc
-	src/Makefile
+	libowl-av/Makefile
 ])
 
 AC_OUTPUT
