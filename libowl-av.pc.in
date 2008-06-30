@@ -3,9 +3,9 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: owl-video-widget
-Description: GStreamer video GTK+ widget
+Name: libowl-av
+Description: OpenedHand Audio/Video Widgets Library
 Requires: gtk+-2.0 gstreamer-0.10 gstreamer-plugins-base-0.10
 Version: @VERSION@
-Libs: -L${libdir} -lowl-video-widget -lgstinterfaces-0.10
+Libs: -L${libdir} -lowl-av -lgstinterfaces-0.10
 Cflags: -I${includedir}

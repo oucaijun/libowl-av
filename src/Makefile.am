@@ -1,17 +1,15 @@
 INCLUDES = -I$(top_srcdir)				
 
-AM_CFLAGS = -Wall -export-dynamic $(VIDEO_WIDGET_CFLAGS)
+AM_CFLAGS = -Wall -export-dynamic $(LIBOWL_AV_CFLAGS)
 
-lib_LTLIBRARIES = libowl-video-widget.la
+lib_LTLIBRARIES = libowl-av.la
 
-libowl_video_widget_la_SOURCES = \
+libowl_av_la_SOURCES = \
 	owl-video-widget.c	\
 	owl-video-widget.h
 
-libowl_video_widget_la_LIBADD = $(VIDEO_WIDGET_LIBS)
-libowl_video_widgetincludedir = $(includedir)/owl/
-libowl_video_widgetinclude_HEADERS = owl-video-widget.h
-
-video_LDADD = $(VIDEO_WIDGET_LIBS) libowl-video-widget.la
+libowl_av_la_LIBADD = $(LIBOWL_AV_LIBS)
+libowl_avincludedir = $(includedir)/libowl-av/
+libowl_avinclude_HEADERS = owl-video-widget.h
 
 MAINTAINERCLEANFILES = config.h.in Makefile.in

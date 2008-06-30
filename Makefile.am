@@ -1,14 +1,14 @@
 SUBDIRS = src
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = owl-video-widget.pc
+pkgconfig_DATA = libowl-av.pc
 
 if WITH_VALA
 vapidir = $(VAPIDIR)
-vapi_DATA = owl-video-widget.vapi
+vapi_DATA = libowl-av.vapi
 endif
 
-EXTRA_DIST = owl-video-widget.pc.in owl-video-widget.vapi
+EXTRA_DIST = libowl-av.pc.in libowl-av.vapi
 
 # Extra clean files so that maintainer-clean removes *everything*
 MAINTAINERCLEANFILES = aclocal.m4 compile config.guess config.sub configure depcomp intltool-extract intltool-merge intltool-update install-sh ltmain.sh Makefile.in missing
