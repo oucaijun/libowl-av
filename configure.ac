@@ -28,6 +28,9 @@ fi
 AC_SUBST(LIBOWL_AV_CFLAGS)
 AC_SUBST(LIBOWL_AV_LIBS)
 
+GLIB_GENMARSHAL=`$PKG_CONFIG --variable=glib_genmarshal glib-2.0`  
+AC_SUBST(GLIB_GENMARSHAL)
+
 AC_CONFIG_FILES([
 	Makefile
 	libowl-av.pc
