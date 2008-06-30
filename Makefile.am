@@ -1,4 +1,4 @@
-SUBDIRS = src
+SUBDIRS = libowl-av
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libowl-av.pc

@@ -1,8 +1,8 @@
 AC_PREREQ(2.53)
 AC_INIT(libowl-av, 0.1, http://www.openedhand.com/)
 AM_INIT_AUTOMAKE()
-AC_CONFIG_SRCDIR(src/owl-video-widget.c)
-AM_CONFIG_HEADER(src/config.h)
+AC_CONFIG_SRCDIR(libowl-av/owl-video-widget.c)
+AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 
 AC_ISC_POSIX
