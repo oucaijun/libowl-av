@@ -1,3 +1,9 @@
+2008-12-10  Ross Burton  <ross@linux.intel.com>
+
+	* libowl-av/owl-audio-player.c:
+	* libowl-av/owl-video-widget.c:
+	Use playbin2 if it is available (Zeeshan Ali)
+
 2008-06-20  Jorn Baayen  <jorn@openedhand.com>
 
 	* src/owl-video-widget.c (bus_message_state_change_cb):

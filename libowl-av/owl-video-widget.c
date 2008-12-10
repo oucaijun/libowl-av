@@ -433,7 +433,13 @@ construct_pipeline (OwlVideoWidget *video_widget)
          * playbin.
          **/
         video_widget->priv->playbin =
-                gst_element_factory_make ("playbin", "playbin");
+                gst_element_factory_make ("playbin2", "playbin2");
+        if (!video_widget->priv->playbin) {
+                /* Try playbin if playbin2 isn't available */
+                video_widget->priv->playbin =
+                        gst_element_factory_make ("playbin", "playbin");
+        }
+
         if (!video_widget->priv->playbin) {
                 g_warning ("No playbin found. Playback will not work.");
 

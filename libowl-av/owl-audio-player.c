@@ -273,7 +273,13 @@ construct_pipeline (OwlAudioPlayer *audio_player)
          * playbin.
          **/
         audio_player->priv->playbin =
-                gst_element_factory_make ("playbin", "playbin");
+                gst_element_factory_make ("playbin2", "playbin2");
+        if (!audio_player->priv->playbin) {
+                /* Try playbin if playbin2 isn't available */
+                audio_player->priv->playbin =
+                        gst_element_factory_make ("playbin", "playbin");
+        }
+
         if (!audio_player->priv->playbin) {
                 g_warning ("No playbin found. Playback will not work.");
 
