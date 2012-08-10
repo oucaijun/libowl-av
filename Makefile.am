@@ -14,5 +14,4 @@ EXTRA_DIST = libowl-av.pc.in libowl-av.vapi
 MAINTAINERCLEANFILES = aclocal.m4 compile config.guess config.sub configure depcomp intltool-extract intltool-merge intltool-update install-sh ltmain.sh Makefile.in missing
 
 snapshot:
-        $(MAKE) dist distdir=$(PACKAGE)-snap`date +"%Y%m%d"`
-
+	$(MAKE) dist distdir=$(PACKAGE)-snap`date +"%Y%m%d"`
