@@ -300,13 +300,23 @@ decodebin_unknown_type_cb (GstElement   *decodebin,
                            GstCaps      *caps,
                            OwlTagReader *tag_reader)
 {
+        GstMessage *message;
+        GstBus *bus;
+
         tag_reader->priv->current_error =
                 g_error_new (OWL_TAG_READER_ERROR,
                              OWL_TAG_READER_ERROR_UNKNOWN_TYPE,
                              "Unknown type");
 
-        flush_head (tag_reader);
-        feed_head (tag_reader);
+        /**
+         * Post a message to the bus, as we are in another thread here.
+         **/
+        message = gst_message_new_error(GST_OBJECT (decodebin),
+                                        tag_reader->priv->current_error, NULL);
+
+        bus = gst_pipeline_get_bus (GST_PIPELINE (tag_reader->priv->pipeline));
+        gst_bus_post (bus, message);
+        gst_object_unref (GST_OBJECT (bus));
 }
 
 /**
